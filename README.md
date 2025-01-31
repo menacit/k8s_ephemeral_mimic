@@ -7,7 +7,29 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 
 
 ## Introduction
-TODO!
+Since \~version 1.23, Kubernetes supports a feature called
+["ephemeral containers"](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/)
+which enables ad-hoc startup of containers inside a running pod. This is neat, since pods are
+traditionally immutable and the addition of a long-running side-car container with every
+potentially useful debugging tool would result in overhead.  
+
+The feature could also be useful security testing and attack simulation. Instead of speculating
+what the consequences could be if _application X_ in _container Y_ of _pod Z_ got popped, let's
+spawn an ephemeral container with access to the same volume mounts, secrets, etc! Furthermore, any
+network policies restricting the "parent pod" will also apply to the ephemeral container.
+
+All the things that give a container its personality (config maps, volumes, security context, etc)
+are unfortunately not automatically shared with ephemeral containers. If all pod containers are
+running in the same "PID namespace" or the "targetContainerName" property is specified, we may
+however abuse a quirk of /proc to access another container's file system/environment variables,
+[as noted by Ivan Velichko](https://iximiuz.com/en/posts/kubernetes-ephemeral-containers/#using-kubectl-debug-with-a-shared-pid-namespace).
+
+This trick does not always work and seem to depend on configuration of the underlying container
+runtime/operating system. Furthermore, any container-specific security context won't be copied.
+Hence, the creation of "k8s\_ephemeral\_mimic.py" - a simple script that clones the
+"securityContext", "env", "envFrom" and "volumeMounts" properties of a targeted container. The
+tool produces a "JSON patch file" which can be applied to spawn a similar-ish ephemeral container
+in a running pod.
 
 
 ## Example usage
@@ -69,4 +91,37 @@ $ kubectl \
 /mimic/var/run/cilium/envoy/sockets
 /mimic/var/lib/cilium/tls/hubble
 /mimic/var/run/secrets/kubernetes.io/serviceaccount
+```
+
+
+## CLI options
+```
+usage: k8s_ephemeral_mimic.py [-h] [-i /path/to/pod.json] [-o /path/to/pod.json]
+                              [-c container-name] -I example.com/image_name:latest [-e FOO=BAR]
+                              [-E {securityContext,env,envFrom,volumeMounts}] [-v] [-V]
+
+k8s_ephemeral_mimic - Inject ephemeral container with mirrored environment, volumes, etc!
+
+options:
+  -h, --help            show this help message and exit
+  -i /path/to/pod.json, --input /path/to/pod.json
+                        Filesystem path to input pod specification in JSON format (default:
+                        stdin)
+  -o /path/to/pod.json, --output /path/to/pod.json
+                        Filesystem path to output pod specification patch in JSON format
+                        (default: stdout)
+  -c container-name, --container container-name
+                        Name of container to mimic (required if pod contains multiple containers)
+  -I example.com/image_name:latest, --image example.com/image_name:latest
+                        Image to use in ephemeral container
+  -e FOO=BAR, --env FOO=BAR
+                        Additional environment variable to be set in container (may be used
+                        multiple times)
+  -E {securityContext,env,envFrom,volumeMounts}, --exclude {securityContext,env,envFrom,volumeMounts}
+                        Exclude key from mirror of source container specification (may be used
+                        multiple times)
+  -v, --verbose         Enable verbose debug logging
+  -V, --version         Display script version
+
+License: GPL-2.0-or-later, URL: https://github.com/menacit/k8s_ephemeral_mimic
 ```
