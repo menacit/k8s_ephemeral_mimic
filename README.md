@@ -10,13 +10,14 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 Since \~version 1.23, Kubernetes supports a feature called
 ["ephemeral containers"](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/)
 which enables ad-hoc startup of containers inside a running pod. This is neat, since pods are
-traditionally immutable and the addition of a long-running side-car container with every
+traditionally somewhat immutable and the addition of a long-running side-car container with every
 potentially useful debugging tool would result in overhead.  
 
 The feature could also be useful security testing and attack simulation. Instead of speculating
 what the consequences could be if _application X_ in _container Y_ of _pod Z_ got popped, let's
-spawn an ephemeral container with access to the same volume mounts, secrets, etc! Furthermore, any
-network policies restricting the "parent pod" will also apply to the ephemeral container.
+spawn an ephemeral container with access to the same volume mounts, secrets, etc and try it out!
+Furthermore, any network policies restricting the "parent pod" would also apply to the ephemeral
+container.
 
 All the things that give a container its personality (config maps, volumes, security context, etc)
 are unfortunately not automatically shared with ephemeral containers. If all pod containers are
