@@ -33,6 +33,14 @@ tool produces a "JSON patch file" which can be applied to spawn a similar-ish ep
 in a running pod.
 
 
+## Acknowledgements
+This tool was created during research for
+[Menacit's Kubernetes Security Course](https://github.com/menacit/kubernetes_security_course).
+Funding for development of the course was provided by _Sweden's National Coordination Centre for
+Research and Innovation in Cybersecurity_, _the Swedish Civil Contingencies Agency_ and
+_the European Union's European Cybersecurity Competence Centre_.  
+
+
 ## Example usage
 Generate and apply ephemeral container patch:
 
