@@ -5,7 +5,7 @@
 '''k8s_ephemeral_mimic - Inject ephemeral container with mirrored environment, volumes, etc!'''
 
 DESCRIPTION = __doc__
-VERSION = '0.1'
+VERSION = '0.2'
 LICENSE = 'GPL-2.0-or-later'
 URL = 'https://github.com/menacit/k8s_ephemeral_mimic'
 SOURCE_KEYS = ['securityContext', 'env', 'envFrom', 'volumeMounts']
@@ -52,6 +52,10 @@ args.add_argument(
     '-E', '--exclude', type=str, choices=SOURCE_KEYS, action='append', default=[],
     dest='exclude_keys',
     help='Exclude key from mirror of source container specification (may be used multiple times)')
+
+args.add_argument(
+    '-r', '--read-only-volumes', action='store_true', default=False,
+    help='Force all volume mounts to use "read-only mode"')
 
 args.add_argument(
     '-v', '--verbose', action='store_true', default=False,
@@ -186,6 +190,10 @@ if 'volumeMounts' in ephemeral_container.keys():
 
     for item in ephemeral_container['volumeMounts']:
         item['mountPath'] = '/mimic' + item['mountPath']
+
+        if args.read_only_volumes:
+            log.debug('Enabling "read-only mode" for volume mount: ' + item['mountPath'])
+            item['readOnly'] = True
 
 # -------------------------------------------------------------------------------------------------
 if additional_environment_variables:

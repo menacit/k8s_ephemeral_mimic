@@ -58,13 +58,14 @@ $ curl \
     --request GET \
     ${BASE_URL} \
   | ./k8s_ephemeral_mimic.py \
-    --container ${CONTAINER} \
-    --image ${EPHEMERAL_IMAGE} \
+      --container ${CONTAINER} \
+      --image ${EPHEMERAL_IMAGE} \
+      --read-only-volumes \
   | curl \
-    --request PATCH \
-    --header 'Content-Type: application/strategic-merge-patch+json' \
-    --data @- \
-    ${BASE_URL}/ephemeralcontainers
+      --request PATCH \
+      --header 'Content-Type: application/strategic-merge-patch+json' \
+      --data @- \
+      ${BASE_URL}/ephemeralcontainers
 
 $ kill ${PROXY_PID}
 ```
@@ -73,8 +74,8 @@ Dump environment variables and list mounted volumes:
 
 ```
 $ kubectl \
-  --namespace ${NAMESPACE} exec ${POD} \
-  -c mimic-0 -- env | grep MIMIC_
+    --namespace ${NAMESPACE} exec ${POD} \
+    -c mimic-0 -- env | grep MIMIC_
   
 MIMIC_CILIUM_CLUSTERMESH_CONFIG=/var/lib/cilium/clustermesh/
 MIMIC_GOMEMLIMIT=3896381440
@@ -84,8 +85,9 @@ MIMIC_K8S_NODE_NAME=worker-2
 MIMIC_CILIUM_K8S_NAMESPACE=kube-system
 
 $ kubectl \
-  --namespace ${NAMESPACE} exec ${POD} \
-  -c mimic-0 -- mount | grep /mimic/ | cut -d ' ' -f 3
+    --namespace ${NAMESPACE} exec ${POD} \
+    -c mimic-0 -- mount \
+  | grep /mimic/ | cut -d ' ' -f 3
 
 /mimic/tmp
 /mimic/lib/modules
@@ -129,6 +131,8 @@ options:
   -E {securityContext,env,envFrom,volumeMounts}, --exclude {securityContext,env,envFrom,volumeMounts}
                         Exclude key from mirror of source container specification (may be used
                         multiple times)
+  -r, --read-only-volumes
+                        Force all volume mounts to use "read-only mode"
   -v, --verbose         Enable verbose debug logging
   -V, --version         Display script version
 
